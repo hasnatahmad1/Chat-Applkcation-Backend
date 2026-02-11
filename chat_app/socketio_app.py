@@ -156,6 +156,11 @@ async def connect(sid, environ):
     # Update user online status
     await update_user_status(user, True)
 
+    # Join private user room
+    user_room = f'user_{user.id}'
+    await sio.enter_room(sid, user_room)
+    logger.info(f"User {user.username} joined private room {user_room}")
+
     # Get all online users and send to client
     online_user_ids = await get_online_users_ids()
     await sio.emit('online_users_list', {
@@ -223,7 +228,7 @@ async def join_group(sid, data):
 
         # Join the room
         room = f'group_{group_id}'
-        sio.enter_room(sid, room)
+        await sio.enter_room(sid, room)
 
         logger.info(f"User {username} joined group {group_id}")
 
@@ -259,7 +264,7 @@ async def leave_group(sid, data):
             return
 
         room = f'group_{group_id}'
-        sio.leave_room(sid, room)
+        await sio.leave_room(sid, room)
 
         logger.info(f"User {username} left group {group_id}")
 
@@ -306,6 +311,15 @@ async def send_group_message(sid, data):
 
         # Broadcast to group room
         room = f'group_{group_id}'
+
+        # DEBUG: Check who is in the room
+        participants = sio.rooms(sid)
+        if room not in participants:
+            logger.warning(
+                f"⚠️ SID {sid} is NOT in group room {room}! Current rooms: {participants}")
+            await sio.enter_room(sid, room)
+
+        logger.info(f"📤 Emitting group_message to room: {room}")
         await sio.emit('group_message', message_data, room=room)
 
         logger.info(f"Group message sent: {username} -> Group {group_id}")
@@ -330,16 +344,18 @@ async def join_direct_chat(sid, data):
             return
 
         # Create unique room name
-        user_ids = sorted([user_id, int(other_user_id)])
+        id1 = int(user_id)
+        id2 = int(other_user_id)
+        user_ids = sorted([id1, id2])
         room = f'direct_{user_ids[0]}_{user_ids[1]}'
 
-        sio.enter_room(sid, room)
+        await sio.enter_room(sid, room)
 
         logger.info(
-            f"User {username} joined direct chat with user {other_user_id}")
+            f"✅ User {username} (ID {id1}) joined room {room} with user {id2}. Rooms: {sio.rooms(sid)}")
 
         await sio.emit('joined_direct_chat', {
-            'other_user_id': other_user_id,
+            'other_user_id': id2,
             'message': 'Successfully joined chat'
         }, room=sid)
 
@@ -363,7 +379,7 @@ async def leave_direct_chat(sid, data):
         user_ids = sorted([user_id, int(other_user_id)])
         room = f'direct_{user_ids[0]}_{user_ids[1]}'
 
-        sio.leave_room(sid, room)
+        await sio.leave_room(sid, room)
 
         logger.info(
             f"User {user_id} left direct chat with user {other_user_id}")
@@ -398,10 +414,31 @@ async def send_direct_message(sid, data):
             return
 
         # Send to both users
-        user_ids = sorted([user_id, int(receiver_id)])
+        u_id = int(user_id)
+        r_id = int(receiver_id)
+        user_ids = sorted([u_id, r_id])
         room = f'direct_{user_ids[0]}_{user_ids[1]}'
 
+        # DEBUG: Check who is in the room
+        participants = sio.rooms(sid)
+        if room not in participants:
+            logger.warning(
+                f"⚠️ SID {sid} (User {u_id}) is NOT in direct room {room}! Participants: {participants}")
+            await sio.enter_room(sid, room)
+            logger.info(f"✅ User {u_id} auto-joined room {room}")
+
+        # Broadcast to conversation room
+        print(f"\n[SOCKET] 📤 Emitting direct_message to room: {room}")
         await sio.emit('direct_message', message_data, room=room)
+
+        # ALSO emit to receiver's private room
+        receiver_room = f'user_{r_id}'
+        print(f"[SOCKET] 📤 ALSO Emitting to private room: {receiver_room}")
+        await sio.emit('direct_message', message_data, room=receiver_room)
+
+        # SANITY CHECK: Emit to everyone (no room)
+        print(f"[SOCKET] 📢 BROADCASTING to everyone just in case")
+        await sio.emit('direct_message', message_data)
 
         logger.info(f"Direct message sent: {username} -> User {receiver_id}")
 
