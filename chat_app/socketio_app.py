@@ -176,23 +176,27 @@ async def connect(sid, environ):
 async def disconnect(sid):
     """Handle client disconnection"""
     try:
+        logger.info(f"🔌 SID {sid} disconnected")
         async with sio.session(sid) as session:
             user_id = session.get('user_id')
             username = session.get('username')
+            logger.info(
+                f"Session data for {sid}: user_id={user_id}, username={username}")
 
         if user_id:
             user = await database_sync_to_async(User.objects.get)(id=user_id)
             await update_user_status(user, False)
 
+            logger.info(f"📢 Broadcasting offline for user {user_id}")
             # Broadcast status change
             await sio.emit('user_status_change', {
                 'user_id': user_id,
                 'is_online': False
             })
-
-            logger.info(f"Client disconnected: {sid} (User: {username})")
+        else:
+            logger.warning(f"⚠️ No user_id found for SID {sid} in disconnect")
     except Exception as e:
-        logger.error(f"Error in disconnect: {e}")
+        logger.error(f"❌ Error in disconnect: {e}")
 
 
 @sio.event
