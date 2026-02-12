@@ -141,14 +141,40 @@ SIMPLE_JWT = {
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://localhost:5173",
     "http://127.0.0.1:3000",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'ngrok-skip-browser-warning',
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# CORS_ALLOWED_ALL_ORIGINS = [True]
 
 # Channel Layers for WebSocket
 # CHANNEL_LAYERS = {
@@ -163,3 +189,8 @@ AUTH_USER_MODEL = 'auth.User'
 # File Upload Settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 3145728  # 3MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 3145728  # 3MB
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://yousef-frizzliest-myah.ngrok-free.dev",
+]
