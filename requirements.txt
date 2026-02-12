@@ -1,8 +1,8 @@
-Django==4.2.8
-djangorestframework==3.14.0
-djangorestframework-simplejwt==5.3.2
+Django
+djangorestframework
+djangorestframework-simplejwt
 django-cors-headers==4.3.1
-Pillow==10.1.0
+Pillow
 python-socketio
 python-socketio[asyncio]
 aiohttp
