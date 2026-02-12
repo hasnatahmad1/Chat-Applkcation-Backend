@@ -13,8 +13,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Create Socket.IO server with CORS support
+# NOTE:
+# We use `async_mode="asgi"` so this Socket.IO server can be mounted
+# directly inside Django's ASGI app (see `chat_app.asgi`), allowing
+# HTTP and WebSocket traffic on the same port.
 sio = socketio.AsyncServer(
-    async_mode='aiohttp',
+    async_mode='asgi',
     cors_allowed_origins=[
         "http://localhost:3000",
         "http://localhost:5173",

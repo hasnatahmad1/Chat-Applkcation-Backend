@@ -14,14 +14,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-your-secret-key-change-in-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 INSTALLED_APPS = [
-    # 'daphne',  # WebSocket support
+    'daphne',  # ASGI / WebSocket support
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -63,7 +63,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'chat_app.wsgi.application'
-# ASGI_APPLICATION = 'chat_app.asgi.application'
+ASGI_APPLICATION = 'chat_app.asgi.application'
 
 
 # Database
